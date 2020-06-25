@@ -6,5 +6,6 @@ public class Test {
         ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("beans.xml");
         User user = (User) context.getBean("user");
         user.show();
+
     }
 }
