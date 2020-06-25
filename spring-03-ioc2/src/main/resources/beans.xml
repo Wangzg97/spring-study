@@ -3,7 +3,7 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         https://www.springframework.org/schema/beans/spring-beans.xsd">
-    <!--    使用无参构造-->
+    <!--  使用无参构造-->
 <!--    <bean id="user" class="com.wang.pojo.User">-->
 <!--        <property name="name" value="zhangsan"/>-->
 <!--    </bean>-->
