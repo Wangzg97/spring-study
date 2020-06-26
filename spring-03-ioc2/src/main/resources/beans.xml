@@ -21,5 +21,8 @@
     <bean id="user" class="com.wang.pojo.User">
         <constructor-arg name="name" value="王五"/>
     </bean>
+<!-- 别名 -->
+<!--    <alias name="user" alias="user2"/>-->
+<!--    <bean id="user3" class="com.wang.pojo.User" name="user4, user5"/>-->
 
 </beans>
