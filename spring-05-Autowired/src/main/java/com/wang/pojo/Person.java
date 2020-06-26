@@ -1,9 +1,16 @@
 package com.wang.pojo;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.lang.Nullable;
+
 public class Person {
 
     private String name;
+    @Autowired
     private Cat cat;
+    @Autowired
+    @Qualifier(value = "dog")
     private Dog dog;
 
     public String getName() {
