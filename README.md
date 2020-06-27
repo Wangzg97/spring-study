@@ -1,7 +1,5 @@
-# spring-study
-# Spring
-
-
+# Spring学习笔记
+*代码及笔记参考自https://space.bilibili.com/95256449
 
 ## 简介
 
@@ -453,3 +451,334 @@ public class Test {
    - 该属性仅用于HTTP Session，同session作用域不同时，所有的Session共享一个Bean实例。
 
    
+
+## Bean的自动装配
+
+- Spring会在上下文中自动寻找，并自动给bean装配属性。
+
+- 三种装配方式：
+  - 在xml中显式配置
+  - 在Java中显式配置
+  - ==**隐式的自动装配**==
+
+### 测试
+
+#### 环境搭建
+
+```java
+package com.wang.pojo;
+
+public class Cat {
+
+    public void Shout(){
+        System.out.println("喵喵喵~");
+    }
+}
+```
+
+```java
+package com.wang.pojo;
+
+public class Dog {
+
+    public void Shout(){
+        System.out.println("汪汪汪~");
+    }
+}
+```
+
+```java
+package com.wang.pojo;
+
+public class Person {
+
+    private String name;
+    private Cat cat;
+    private Dog dog;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Cat getCat() {
+        return cat;
+    }
+
+    public void setCat(Cat cat) {
+        this.cat = cat;
+    }
+
+    public Dog getDog() {
+        return dog;
+    }
+
+    public void setDog(Dog dog) {
+        this.dog = dog;
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "name='" + name + '\'' +
+                ", cat=" + cat +
+                ", dog=" + dog +
+                '}';
+    }
+}
+```
+
+#### byName自动装配
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="cat" class="com.wang.pojo.Cat"/>
+    <bean id="dog" class="com.wang.pojo.Dog"/>
+
+    <!--  byName:会自动在容器上下文中寻找，和自己对象set方法的参数值对应的bean-id 
+ 	要保证bean的id唯一  -->
+    <bean id="person" class="com.wang.pojo.Person" autowire="byName">
+        <property name="name" value="张三"/>
+    </bean>
+
+</beans>
+```
+
+#### byType自动装配
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="cat13413" class="com.wang.pojo.Cat"/>
+    <bean id="dog425" class="com.wang.pojo.Dog"/>
+
+    <!--  byName:会自动在容器上下文中寻找，和自己对象属性类型相同的bean 
+ 	要保证该类型的bean是唯一的  -->
+    <bean id="person" class="com.wang.pojo.Person" autowire="byType">
+        <property name="name" value="张三"/>
+    </bean>
+
+</beans>
+```
+
+#### 使用注解实现自 动装配
+
+导入约束并配置注解的支持
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:annotation-config/>
+
+</beans>
+```
+
+1. **@Autowired**:
+
+   直接在属性上使用，也可在set方法上使用。使用@Autowired可以不用编写set方法，前提是自动装配的属性在IOC容器中存在且名字符合规范。
+
+   扩展：
+
+   - 使用@nullable标记的字段可以为null。如
+
+     ```java
+     public void setName(@Nullable String name) {
+         this.name = name;
+     }
+     ```
+
+   - ```java
+     @Autowired(required = false)  // 说明这个cat对象可以为null，否则不允许为空
+     private Cat cat;
+     ```
+
+   - ```Java
+     @Autowired
+     @Qualifier(value = "dog2")
+     private Dog dog;
+     ```
+
+     ```xml
+     <bean id="dog" class="com.wang.pojo.Dog"/>
+     <bean id="dog2" class="com.wang.pojo.Dog"/>
+     ```
+
+     可以使用@Qualifier(value = "xxx")来指定具体的bean对象注入。
+
+2. **@Resource**
+
+   ```Java
+   public class Person {
+   
+       private String name;
+       @Resource(name = "cat")
+       private Cat cat;
+       @Resource(name = "dog")
+       private Dog dog;
+       
+   }
+   ```
+
+   - @Resource和@Autowired的联系和区别：
+     - 都是用来自动装配的，都可以放在属性字段上；
+     - @Autowired通过byType的方式实现；
+     - @Resource默认通过byName来实现，如果找不到对应的名字则通过byType来实现；
+
+3. **@Component**
+
+   组件，一般放在类上方，表示类被Spring管理中
+
+   - 衍生注解：按照MVC三层架构分层中。功能与@Component相同。
+
+     （1）dao：**@Repository**
+
+     （2）service：**@Service**
+
+     （3）controller：**@Controller**
+
+
+
+## 利用JavaConfig实现配置
+
+```java
+package com.wang.config;
+
+import com.wang.pojo.User;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public User getUser(){
+        return new User();
+    }
+}
+```
+
+```java
+package com.wang.pojo;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
+public class User {
+
+    private String name;
+
+    public String getName() {
+        return name;
+    }
+    @Value("张三")
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "name='" + name + '\'' +
+                '}';
+    }
+}
+```
+
+```java
+import com.wang.config.AppConfig;
+import com.wang.pojo.User;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+public class Test {
+
+    @org.junit.Test
+    public void test1(){
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+        User user = (User) context.getBean("getUser");
+        System.out.println(user.toString());
+    }
+
+}
+```
+
+
+
+## 代理模式
+
+### 分类
+
+- 静态代理
+- 动态代理
+- ![image-20200627152937505](C:\Users\wangzg\AppData\Roaming\Typora\typora-user-images\image-20200627152937505.png)
+
+### 静态代理
+
+#### 角色分析：
+
+- 抽象角色：一般会使用接口或抽象类来解决
+- 真实角色：被代理的角色
+- 代理角色：代理真实角色，代理真实角色后一般会做一些附属操作
+- 客户：访问代理对象的角色
+
+#### 示例：
+
+见spring-08-proxy文件夹内
+
+#### 优缺点
+
+- 优点：
+  - 使真实角色的操作更加纯粹，不用关注一些公共业务
+  - 公共业务交给代理角色，实现业务分工
+  - 公共业务拓展时，方便集中管理
+- 缺点：
+  - 一个真实角色就会产生一个代理角色，代码量较大
+
+### 动态代理
+
+- 动态代理的代理类是动态生成的。
+
+#### 分类
+
+- 基于接口 -- JDK动态代理
+- 基于类 -- cglib动态代理
+- Java字节码实现 -- Javasist
+
+#### 基础类：Proxy与InvocationHandler
+
+- `Proxy`提供了创建动态代理类和实例的静态方法，它也是由这些方法创建的所有动态代理类的超类。
+
+- `InvocationHandler`是由代理实例的*调用处理程序*实现的*接口* 。
+
+  每个代理实例都有一个关联的调用处理程序。  当在代理实例上调用方法时，方法调用将被编码并分派到其调用处理程序的`invoke`方法。
+
+#### 示例：
+
+见spring-08-proxy文件夹内
+
+#### 优点
+
+- 使真实角色的操作更加纯粹，不用关注一些公共业务
+- 公共业务交给代理角色，实现业务分工
+- 公共业务拓展时，方便集中管理
+- 一个动态代理类代理的是一个接口，一般就是对应的一类业务
+- 一个动态代理类可以代理多个类
