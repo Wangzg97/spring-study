@@ -1,5 +1,14 @@
-# Spring学习笔记
-*代码及笔记参考自https://space.bilibili.com/95256449
+# Spring
+
+*代码及笔记参考自https://space.bilibili.com/95256449*
+
+Spring官方下载地址:https://repo.spring.io/release/org/springframework/spring/
+
+Mybatis官方文档:https://mybatis.org/mybatis-3/zh/getting-started.html
+
+Mybatis-spring官方文档:http://mybatis.org/spring/zh/getting-started.html
+
+
 
 ## 简介
 
@@ -782,3 +791,179 @@ public class Test {
 - 公共业务拓展时，方便集中管理
 - 一个动态代理类代理的是一个接口，一般就是对应的一类业务
 - 一个动态代理类可以代理多个类
+
+## AOP
+
+###　概念
+
+
+
+​	AOP(Aspect Oriented Programming):面向切面编程,通过预编译方式和运行期动态代理实现程序功能的统一维护的一种技术.利用AOP可以对因为业务逻辑的各个部分进行隔离,从而使得业务逻辑各部分之间的耦合性降低,提高程序的可重用性,同时提高开发效率.
+
+### AOP在Spring中的作用
+
+ ==提供声明式事务; 允许用户自定义切面==
+
+![image-20200627183611968](C:\Users\wangzg\AppData\Roaming\Typora\typora-user-images\image-20200627183611968.png)
+
+### 使用Spring实现AOP
+
+导入依赖包
+
+```xml
+<dependency>
+    <groupId>org.aspectj</groupId>
+    <artifactId>aspectjweaver</artifactId>
+    <version>1.8.13</version>
+</dependency>
+```
+
+#### 方式一:使用Spring的接口
+
+applicationContext.xml
+
+```xml
+    <bean id="beforeLog" class="com.wang.log.BeforeLog"/>
+    <bean id="afterReturnLog" class="com.wang.log.AfterReturnLog"/>    
+	<!-- 方式一：使用原生Spring API接口-->
+    <aop:config>
+        <!-- 配置切入点, execution(要执行的位置)-->
+        <aop:pointcut id="pointcut" expression="execution(* com.wang.service.UserServiceImpl.*(..))"/>
+        <!-- 执行环绕增加 -->
+        <aop:advisor advice-ref="beforeLog" pointcut-ref="pointcut"/>
+        <aop:advisor advice-ref="afterReturnLog" pointcut-ref="pointcut"/>
+    </aop:config>
+```
+
+#### 方式二：自定义类
+
+DIY.java
+
+```java
+package com.wang.diy;
+
+public class DIY {
+
+    public void before(){
+        System.out.println("======before=====");
+    }
+
+    public void after(){
+        System.out.println("======after=====");
+    }
+}
+```
+
+applicationContext.xml
+
+```xml
+<!-- 方式二：自定义类-->
+    <bean id="diy" class="com.wang.diy.DIY"/>
+    <aop:config>
+        <!-- 自定义切面，ref要引用的类-->
+        <aop:aspect ref="diy">
+            <!-- 切入点 -->
+            <aop:pointcut id="point" expression="execution(* com.wang.service.UserServiceImpl.*(..))"/>
+            <!-- 通知 -->
+            <aop:before method="before" pointcut-ref="point"/>
+            <aop:after method="after" pointcut-ref="point"/>
+        </aop:aspect>
+    </aop:config>
+```
+
+#### 方式三：使用注解实现AOP
+
+applicationContext.xml
+
+```xml
+	<!-- 方式三：使用注解-->
+    <bean id="annotationPointCut" class="com.wang.diy.AnnotationPointCut"/>
+    <!-- 开启注解支持   动态代理JDK(默认 proxy-target-class="false")  cglib(proxy-target-class="true") -->
+    <aop:aspectj-autoproxy proxy-target-class="false"/>
+```
+
+AnnotationPointCut.java
+
+```java
+package com.wang.diy;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.Signature;
+import org.aspectj.lang.annotation.After;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+
+// 方式三：使用注解实现AOP
+@Aspect // 标注这是一个切面
+public class AnnotationPointCut {
+    @Before("execution(* com.wang.service.UserServiceImpl.*(..))")
+    public void before(){
+        System.out.println("=====before=====");
+    }
+
+    @After("execution(* com.wang.service.UserServiceImpl.*(..))")
+    public void after(){
+        System.out.println("=====after=====");
+    }
+
+    // 环绕增强中，可以获取切入点进行处理
+    @Around("execution(* com.wang.service.UserServiceImpl.*(..))")
+    public void aroud(ProceedingJoinPoint joinPoint) throws Throwable {
+        System.out.println("环绕前");
+
+        Signature signature = joinPoint.getSignature();// 获得签名--方法的全限定名
+        System.out.println("signature: " + signature);
+
+        // 执行方法
+        Object proceed = joinPoint.proceed();
+
+        System.out.println("环绕后");
+    }
+}
+```
+
+## 整合Mybatis
+
+步骤:
+
+1. 导入jar包:
+   - junit
+   - mybatis
+   - mysql
+   - spring相关的
+   - aop织入
+   - mybatis-spring
+2. 配置文件
+3. 测试
+
+#### Mybatis
+
+1. 实体类
+2. 核心配置文件
+3. 编写接口
+4. Mapper.xml
+5. 测试
+
+*(代码见spring-10-mybatis)*
+
+#### Mybatis-spring
+
+*(代码见spring-10-mybatis)*
+
+
+
+## 声明式事务
+
+事务:一组业务当作一个执行单元,要么都成功,要么都失败.
+
+#### **ACID特性**
+
+- 原子性（atomicity）。一个事务是一个不可分割的工作单位，事务中包括的操作要么都做，要么都不做。
+
+- 一致性（consistency）。事务必须是使数据库从一个一致性状态变到另一个一致性状态。一致性与原子性是密切相关的。
+
+- 隔离性（isolation）。一个事务的执行不能被其他事务干扰。即一个事务内部的操作及使用的数据对并发的其他事务是隔离的，并发执行的各个事务之间不能互相干扰。*防止数据损坏*
+
+- 持久性（durability）。持久性也称永久性（permanence），指一个事务一旦提交，它对数据库中数据的改变就应该是永久性的。接下来的其他操作或故障不应该对其有任何影响。
+
