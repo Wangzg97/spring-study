@@ -25,7 +25,7 @@ public class AnnotationPointCut {
     public void aroud(ProceedingJoinPoint joinPoint) throws Throwable {
         System.out.println("环绕前");
 
-        Signature signature = joinPoint.getSignature();// 获得签名
+        Signature signature = joinPoint.getSignature();// 获得签名--方法的全限定名
         System.out.println("signature: " + signature);
 
         // 执行方法

@@ -34,7 +34,7 @@
 <!--        </aop:aspect>-->
 <!--    </aop:config>-->
 
-    <!-- 方式二：自定义类-->
+    <!-- 方式三：使用注解-->
     <bean id="annotationPointCut" class="com.wang.diy.AnnotationPointCut"/>
     <!-- 开启注解支持   动态代理JDK(默认 proxy-target-class="false")  cglib(proxy-target-class="true") -->
     <aop:aspectj-autoproxy proxy-target-class="false"/>
